@@ -10,6 +10,7 @@ from lib.utils.config import Config
 
 from lib.models.base_network import BaseFeatureExtractor
 from lib.models.network import FeatureExtractor
+from lib.models.vit_network import VitFeatureExtractor
 
 from lib.datasets.linemod.dataloader_query import LINEMOD
 from lib.datasets.linemod.dataloader_template import TemplatesLINEMOD
@@ -57,6 +58,11 @@ if config_run.model.backbone == "resnet50":
     weights.load_pretrained_backbone(prefix="backbone.",
                                      model=model, pth_path=os.path.join(config_global.root_path,
                                                                         config_run.model.pretrained_weights_resnet50))
+elif config_run.model.backbone == "vit_b_16":
+    model = VitFeatureExtractor(config_model=config_run.model, threshold=0.2)
+    model.apply(weights.KaiMingInit)
+    model.cuda()
+
 else:
     model = BaseFeatureExtractor(config_model=config_run.model, threshold=0.2)
     model.apply(weights.KaiMingInit)

@@ -142,10 +142,10 @@ class ResNet(nn.Module):
         out = self.layer1(out)
         out = self.layer2(out)
         out = self.layer3(out)
-        out = self.layer4(out)
+        out = self.layer4(out) #torch.Size([2, 2048, 16, 16])
 
         if self.use_avg_pooling_and_fc:
-            out = self.avgpool(out)
+            out = self.avgpool(out) # torch.Size([2, 2048, 1, 1])
             out = out.view(out.size(0), -1)
             out = self.fc(out)
 
