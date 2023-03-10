@@ -142,7 +142,12 @@ for epoch in tqdm(range(0, nb_epochs)):
                                            logger=trainer_logger,
                                            tb_logger=tb_logger,is_master=is_master)
         new_score[config_split[0] + "_err"] = testing_score[0]
-        new_score[config_split[0] + "_acc"] = testing_score[-1]
+        #new_score[config_split[0] + "_acc"] = testing_score[-1]
+        new_score[config_split[0] + "_acc15"] = testing_score[-5]
+        new_score[config_split[0] + "_acc12"] = testing_score[-4]
+        new_score[config_split[0] + "_acc9"] = testing_score[-3]
+        new_score[config_split[0] + "_acc6"] = testing_score[-2]
+        new_score[config_split[0] + "_acc3"] = testing_score[-1]
 
     # tracking the best score in terms of accuracy
     metrics.update_score(current_score=scores, new_score=new_score)
