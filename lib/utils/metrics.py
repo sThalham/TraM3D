@@ -1,12 +1,28 @@
 def init_score():
     scores = {"seen_err": 0,
-              "seen_acc": 0,
+              "seen_acc15": 0,
+              "seen_acc12": 0,
+              "seen_acc9": 0,
+              "seen_acc6": 0,
+              "seen_acc3": 0,
               "seen_occ_err": 0,
-              "seen_occ_acc": 0,
+              "seen_occ_acc15": 0,
+              "seen_occ_acc12": 0,
+              "seen_occ_acc9": 0,
+              "seen_occ_acc6": 0,
+              "seen_occ_acc3": 0,
               "unseen_err": 0,
-              "unseen_acc": 0,
+              "unseen_acc15": 0,
+              "unseen_acc12": 0,
+              "unseen_acc9": 0,
+              "unseen_acc6": 0,
+              "unseen_acc3": 0,
               "unseen_occ_err": 0,
-              "unseen_occ_acc": 0}
+              "unseen_occ_acc15": 0,
+              "unseen_occ_acc12": 0,
+              "unseen_occ_acc9": 0,
+              "unseen_occ_acc6": 0,
+              "unseen_occ_acc3": 0}
     return scores
 
 
@@ -18,7 +34,15 @@ def update_score(current_score, new_score):
     for name in names:
         if name.endswith("err"):  # take the minimum
             current_score[name] = min(current_score[name], new_score[name])
-        elif name.endswith("acc"):  # take the maximum
+        elif name.endswith("acc15"):  # take the maximum
+            current_score[name] = max(current_score[name], new_score[name])
+        elif name.endswith("acc12"):  # take the maximum
+            current_score[name] = max(current_score[name], new_score[name])
+        elif name.endswith("acc9"):  # take the maximum
+            current_score[name] = max(current_score[name], new_score[name])
+        elif name.endswith("acc6"):  # take the maximum
+            current_score[name] = max(current_score[name], new_score[name])
+        elif name.endswith("acc3"):  # take the maximum
             current_score[name] = max(current_score[name], new_score[name])
 
 
