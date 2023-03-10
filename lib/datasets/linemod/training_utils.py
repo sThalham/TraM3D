@@ -31,7 +31,7 @@ def train(train_data, model, optimizer, warm_up_config, epoch, logger, tb_logger
                         g['lr'] = lrUpdate
 
             # load data and label
-            miniBatch = train_loader.next()
+            miniBatch = next(train_loader)
             query = miniBatch["query"].cuda()
             template = miniBatch["template"].cuda()
             mask = miniBatch["mask"].cuda().float()

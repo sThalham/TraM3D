@@ -17,27 +17,53 @@ def calculate_score(pred_location, gt_location, id_symmetry, id_obj, pred_id_obj
     angle_err_sym = torch.rad2deg(torch.arccos(cosine_sim_sym.clamp(min=-1, max=1)))
     angle_err[id_symmetry == 1] = torch.minimum(angle_err[id_symmetry == 1], angle_err_sym[id_symmetry == 1])
 
-    list_err, list_pose_acc, list_class_acc, list_class_and_pose_acc15 = {}, {}, {}, {}
+    list_err, list_pose_acc15, list_class_acc, list_class_and_pose_acc15 = {}, {}, {}, {}
+    list_pose_acc12, list_pose_acc9, list_pose_acc6, list_pose_acc3 = {}, {}, {}, {}
+    list_class_and_pose_acc12, list_class_and_pose_acc9, list_class_and_pose_acc6, list_class_and_pose_acc3 = {}, {}, {}, {}
     for i in range(len(unique_ids)):
         err = angle_err[id_obj == unique_ids[i]]
         recognition_acc = (pred_id_obj[id_obj == unique_ids[i]] == unique_ids[i])
 
         class_and_pose_acc15 = torch.logical_and(err <= 15, recognition_acc).float().mean()
+        class_and_pose_acc12 = torch.logical_and(err <= 12, recognition_acc).float().mean()
+        class_and_pose_acc9 = torch.logical_and(err <= 9, recognition_acc).float().mean()
+        class_and_pose_acc6 = torch.logical_and(err <= 6, recognition_acc).float().mean()
+        class_and_pose_acc3 = torch.logical_and(err <= 3, recognition_acc).float().mean()
         err = err.mean()
         recognition_acc = recognition_acc.float().mean()
-        pose_acc = (err <= 15).float().mean()
+        pose_acc15 = (err <= 15).float().mean()
+        pose_acc12 = (err <= 12).float().mean()
+        pose_acc9 = (err <= 9).float().mean()
+        pose_acc6 = (err <= 6).float().mean()
+        pose_acc3 = (err <= 3).float().mean()
 
         list_err[unique_ids[i].item()] = err
-        list_pose_acc[unique_ids[i].item()] = pose_acc
+        list_pose_acc15[unique_ids[i].item()] = pose_acc15
+        list_pose_acc12[unique_ids[i].item()] = pose_acc12
+        list_pose_acc9[unique_ids[i].item()] = pose_acc9
+        list_pose_acc6[unique_ids[i].item()] = pose_acc6
+        list_pose_acc3[unique_ids[i].item()] = pose_acc3
         list_class_acc[unique_ids[i].item()] = recognition_acc
         list_class_and_pose_acc15[unique_ids[i].item()] = class_and_pose_acc15
+        list_class_and_pose_acc12[unique_ids[i].item()] = class_and_pose_acc12
+        list_class_and_pose_acc9[unique_ids[i].item()] = class_and_pose_acc9
+        list_class_and_pose_acc6[unique_ids[i].item()] = class_and_pose_acc6
+        list_class_and_pose_acc3[unique_ids[i].item()] = class_and_pose_acc3
 
     list_err["mean"] = torch.mean(angle_err)
-    list_pose_acc["mean"] = (angle_err <= 15).float().mean()
+    list_pose_acc15["mean"] = (angle_err <= 15).float().mean()
+    list_pose_acc12["mean"] = (angle_err <= 12).float().mean()
+    list_pose_acc9["mean"] = (angle_err <= 9).float().mean()
+    list_pose_acc6["mean"] = (angle_err <= 6).float().mean()
+    list_pose_acc3["mean"] = (angle_err <= 3).float().mean()
     list_class_acc["mean"] = (pred_id_obj == id_obj).float().mean()
     list_class_and_pose_acc15["mean"] = torch.logical_and(angle_err <= 15, pred_id_obj == id_obj).float().mean()
+    list_class_and_pose_acc12["mean"] = torch.logical_and(angle_err <= 12, pred_id_obj == id_obj).float().mean()
+    list_class_and_pose_acc9["mean"] = torch.logical_and(angle_err <= 9, pred_id_obj == id_obj).float().mean()
+    list_class_and_pose_acc6["mean"] = torch.logical_and(angle_err <= 6, pred_id_obj == id_obj).float().mean()
+    list_class_and_pose_acc3["mean"] = torch.logical_and(angle_err <= 3, pred_id_obj == id_obj).float().mean()
 
-    return list_err, list_pose_acc, list_class_acc, list_class_and_pose_acc15
+    return list_err, list_pose_acc15, list_class_acc, list_class_and_pose_acc15, list_class_and_pose_acc12, list_class_and_pose_acc9, list_class_and_pose_acc6, list_class_and_pose_acc3
 
 
 def test(query_data, template_data, model, epoch, logger, tb_logger, split_name, list_id_obj, is_master):
@@ -47,7 +73,11 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
     meter_error = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
     meter_accuracy = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
     meter_recognition = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
-    meter_accuracy_class_and_pose = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
+    meter_accuracy_class_and_pose15 = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
+    meter_accuracy_class_and_pose12 = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
+    meter_accuracy_class_and_pose9 = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
+    meter_accuracy_class_and_pose6 = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
+    meter_accuracy_class_and_pose3 = {id_obj: AverageValueMeter() for id_obj in list_id_obj}
 
     query_size, query_dataloader = len(query_data), iter(query_data)
     template_size, template_dataloader = len(template_data), iter(template_data)
@@ -60,7 +90,7 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
         list_feature_template, list_synthetic_pose, list_id_obj_template, list_mask = [], [], [], []
         for i in range(template_size):
             # read all templates and its poses
-            miniBatch = template_dataloader.next()
+            miniBatch = next(template_dataloader)
 
             template = miniBatch["template"].cuda()
             obj_pose = miniBatch["obj_pose"].cuda()
@@ -79,7 +109,7 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
         list_mask = torch.cat(list_mask, dim=0)
 
         for i in range(query_size):
-            miniBatch = query_dataloader.next()
+            miniBatch = next(query_dataloader)
 
             query = miniBatch["query"].cuda()
             obj_pose = miniBatch["obj_pose"].cuda()
@@ -94,7 +124,7 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
             pred_pose = list_synthetic_pose[pred_index.reshape(-1)]
             pred_id_obj = list_id_obj_template[pred_index.reshape(-1)]
 
-            err, acc, class_score, class_and_pose = calculate_score(pred_location=pred_pose,
+            err, acc, class_score, class_and_pose15, class_and_pose12, class_and_pose9, class_and_pose6, class_and_pose3 = calculate_score(pred_location=pred_pose,
                                                                     gt_location=obj_pose,
                                                                     id_symmetry=id_symmetry,
                                                                     id_obj=id_obj,
@@ -103,9 +133,13 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
                 meter_error[key].update(err[key].item())
                 meter_accuracy[key].update(acc[key].item())
                 meter_recognition[key].update(class_score[key].item())
-                meter_accuracy_class_and_pose[key].update(class_and_pose[key].item())
+                meter_accuracy_class_and_pose15[key].update(class_and_pose15[key].item())
+                meter_accuracy_class_and_pose12[key].update(class_and_pose12[key].item())
+                meter_accuracy_class_and_pose9[key].update(class_and_pose9[key].item())
+                meter_accuracy_class_and_pose6[key].update(class_and_pose6[key].item())
+                meter_accuracy_class_and_pose3[key].update(class_and_pose3[key].item())
 
-        scores = [meter_error, meter_accuracy, meter_recognition, meter_accuracy_class_and_pose]
+        scores = [meter_error, meter_accuracy, meter_recognition, meter_accuracy_class_and_pose15, meter_accuracy_class_and_pose12, meter_accuracy_class_and_pose9, meter_accuracy_class_and_pose6, meter_accuracy_class_and_pose3]
         if is_master:
             results = {}
             for idx_metric, metric_name in enumerate(["error", "accuracy", "recognition", "recognition and pose"]):
@@ -121,8 +155,12 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
                                                         meter_error["mean"].avg,
                                                         meter_accuracy["mean"].avg,
                                                         meter_recognition["mean"].avg,
-                                                        meter_accuracy_class_and_pose["mean"].avg)
+                                                        meter_accuracy_class_and_pose15["mean"].avg,
+                                                        meter_accuracy_class_and_pose12["mean"].avg,
+                                                        meter_accuracy_class_and_pose9["mean"].avg,
+                                                        meter_accuracy_class_and_pose6["mean"].avg,
+                                                        meter_accuracy_class_and_pose3["mean"].avg)
         logger.info(filled_monitoring_text)
         logger.info(timing_text.format(epoch, (time.time() - start_time) / 60))
     return [meter_error["mean"].avg, meter_accuracy["mean"].avg, meter_recognition["mean"].avg,
-            meter_accuracy_class_and_pose["mean"].avg]
+            meter_accuracy_class_and_pose15["mean"].avg, meter_accuracy_class_and_pose12["mean"].avg, meter_accuracy_class_and_pose9["mean"].avg, meter_accuracy_class_and_pose6["mean"].avg, meter_accuracy_class_and_pose3["mean"].avg]
