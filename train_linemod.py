@@ -153,7 +153,7 @@ for epoch in tqdm(range(0, nb_epochs)):
     metrics.update_score(current_score=scores, new_score=new_score)
     tb_logger.add_scalar_dict_list('results', [scores], epoch)
 
-    text = '\nEpoch-{}: train_loss={}, seen15={}, seen12={}, seen9={}, seen6={}, seen3={}, seen_occ15={}, seen_occ12={}, seen_occ9={}, seen_occ6={}, seen_occ3={}, unseen15={}, unseen12={}, unseen9={}, unseen6={}, unseen3={}, unseen_occ15={}, unseen_occ12={}, unseen_occ9={}, unseen_occ6={}, unseen_occ3={} \n\n'
+    text = '\nEpoch-{}: train_loss={}, seen_acc15={}, seen_acc12={}, seen_acc9={}, seen_acc6={}, seen_acc3={}, seen_occ_acc15={}, seen_occ_acc12={}, seen_occ_acc9={}, seen_occ_acc6={}, seen_occ_acc3={}, unseen_acc15={}, unseen_acc12={}, unseen_acc9={}, unseen_acc6={}, unseen_acc3={}, unseen_occ_acc15={}, unseen_occ_acc12={}, unseen_occ_acc9={}, unseen_occ_acc6={}, unseen_occ_acc3={} \n\n'
     trainer_logger.info(text.format(epoch, train_loss, new_score["seen_acc15"], new_score["seen_acc12"], new_score["seen_acc9"], new_score["seen_acc6"], new_score["seen_acc3"], new_score["seen_occ_acc15"], new_score["seen_occ_acc12"], new_score["seen_occ_acc9"], new_score["seen_occ_acc6"], new_score["seen_occ_acc3"],
                                     new_score["unseen_acc15"], new_score["unseen_acc12"], new_score["unseen_acc9"], new_score["unseen_acc6"], new_score["unseen_acc3"], new_score["unseen_occ_acc15"], new_score["unseen_occ_acc12"], new_score["unseen_occ_acc9"], new_score["unseen_occ_acc6"], new_score["unseen_occ_acc3"]))
     if is_master:
