@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import math
 from torchvision.models import vit_b_16
+from torchsummary import summary
 
 
 class ViT(nn.Module):
@@ -31,6 +32,13 @@ def vit_b_16_mod(use_avg_pooling_and_fc=True, pretrained=None, **kwargs):
         :param use_avg_pooling_and_fc:
     """
     model = vit_b_16(weights=pretrained)
+    #summary(model, (3, 224, 224), device="cpu")
+    #modules = list(model.children())[:]
+
+    #for i, layer in enumerate(modules):
+    #    print('layer: ', i, layer, layer.size())
+
+    #model = nn.Sequential(*modules)
     model = ViT(use_avg_pooling_and_fc, model, **kwargs)
 
     return model
@@ -77,6 +85,13 @@ if __name__ == '__main__':
     weights = ["IMAGENET1K_V1", "IMAGENET1K_SWAG_E2E_V1", "IMAGENET1K_SWAG_LINEAR_V1"]
     net = vit_b_16_mod(num_classes=128, pretrained="IMAGENET1K_V1")
     data = torch.randn(2, 3, 224, 224)
+    #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #data.to(device)
     x = net(data)
     print(x.shape)
     print(x.shape)
+
+    modules = list(net.children())[:]
+    for i, layer in enumerate(modules):
+        print('layer: ', i, layer)
+        print('shape: ', layer.size())

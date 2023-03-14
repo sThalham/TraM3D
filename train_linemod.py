@@ -48,12 +48,15 @@ trainer_logger, tb_logger, is_master, world_size, local_rank = gpu_utils.init_gp
                                                                                   tb_logdir=tb_logdir,
                                                                                   trainer_logger_name=dir_name)
 
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # initialize network
 # load pretrained weight if backbone are ResNet50
 if config_run.model.backbone == "resnet50":
     model = FeatureExtractor(config_model=config_run.model, threshold=0.2)
     model.apply(weights.KaiMingInit)
-    model.cuda()
+    model.to(device)
+    #model.cuda()
     print("Loading pretrained weights from MOCO...")
     weights.load_pretrained_backbone(prefix="backbone.",
                                      model=model, pth_path=os.path.join(config_global.root_path,
@@ -61,12 +64,15 @@ if config_run.model.backbone == "resnet50":
 elif config_run.model.backbone == "vit_b_16":
     model = VitFeatureExtractor(config_model=config_run.model, threshold=0.2)
     model.apply(weights.KaiMingInit)
-    model.cuda()
+    dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    model.to(device)
+    #model.cuda()
 
 else:
     model = BaseFeatureExtractor(config_model=config_run.model, threshold=0.2)
     model.apply(weights.KaiMingInit)
-    model.cuda()
+    model.to(device)
+    #model.cuda()
 
 # load checkpoint if it's available
 if args.checkpoint is not None:
