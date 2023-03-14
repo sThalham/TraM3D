@@ -16,7 +16,6 @@ class ViT(nn.Module):
 
     def forward(self, x):
         out = self.ViT_layer(x)
-        print(out.shape)
 
         if self.use_avg_pooling_and_fc:
             #out = self.avgpool(out)
