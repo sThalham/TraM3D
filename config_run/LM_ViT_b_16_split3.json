@@ -1,17 +1,16 @@
 {
   "model" :
     {
-        "backbone": "resnet50",
-        "use_global": false,
+        "backbone": "vit_b_16",
+        "use_global": true,
         "descriptor_size": 16,
         "normalize_feature": true,
         "loss": "InfoNCE",
-        "regression_loss": false,
-        "pretrained_weights_resnet50": "pretrained/moco_v2_800ep_pretrain.pth"
+        "regression_loss": false
     },
   "train":
   {
-    "batch_size": 2,
+    "batch_size": 16,
         "optimizer": {
             "lr": 1.0e-4,
             "weight_decay": 5e-4
@@ -23,7 +22,7 @@
             "update_range": "epoch"
         },
         "epochs": 500,
-        "num_workers": 10
+        "num_workers": 6
   },
   "log":
     {
@@ -33,7 +32,7 @@
     },
   "dataset":
   {
-    "split": "split1",
+    "split": "split3",
     "image_size": 224,
     "use_augmentation": true,
     "sample_path": "results/samples"

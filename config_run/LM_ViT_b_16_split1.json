@@ -22,7 +22,7 @@
             "update_range": "epoch"
         },
         "epochs": 500,
-        "num_workers": 10
+        "num_workers": 6
   },
   "log":
     {
@@ -34,7 +34,7 @@
   {
     "split": "split1",
     "image_size": 224,
-    "use_augmentation": false,
+    "use_augmentation": true,
     "sample_path": "results/samples"
   }
 }
