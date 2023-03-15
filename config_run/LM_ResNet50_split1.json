@@ -11,7 +11,7 @@
     },
   "train":
   {
-    "batch_size": 2,
+    "batch_size": 16,
         "optimizer": {
             "lr": 1.0e-4,
             "weight_decay": 5e-4

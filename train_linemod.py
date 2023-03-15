@@ -119,8 +119,9 @@ optimizer = torch.optim.Adam(list(model.parameters()), lr=config_run.train.optim
 scores = metrics.init_score()
 if config_run.model.backbone == "resnet50":
     nb_epochs = 20
-elif config_run.model.backbone == "vit_b_16":
-    nb_epochs = 100
+elif config_run.model.backbone[:3] == "vit":
+    nb_epochs = 20
+    optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 else:
     nb_epochs = 120
 for epoch in tqdm(range(0, nb_epochs)):
