@@ -4,7 +4,7 @@ import torch
 from tqdm import tqdm
 
 from lib.utils import gpu_utils, weights, metrics
-from lib.utils.optimizer import adjust_learning_rate
+from lib.utils.optimizer import adjust_learning_rate, cosine_scheduler, get_world_size
 from lib.datasets.dataloader_utils import init_dataloader
 from lib.utils.config import Config
 
@@ -49,7 +49,7 @@ trainer_logger, tb_logger, is_master, world_size, local_rank = gpu_utils.init_gp
                                                                                   trainer_logger_name=dir_name)
 
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 # initialize network
 # load pretrained weight if backbone are ResNet50
 if config_run.model.backbone == "resnet50":
@@ -61,10 +61,9 @@ if config_run.model.backbone == "resnet50":
     weights.load_pretrained_backbone(prefix="backbone.",
                                      model=model, pth_path=os.path.join(config_global.root_path,
                                                                         config_run.model.pretrained_weights_resnet50))
-elif config_run.model.backbone == "vit_b_16":
+elif config_run.model.backbone[:3] == "vit":
     model = VitFeatureExtractor(config_model=config_run.model, threshold=0.2)
-    model.apply(weights.KaiMingInit)
-    dev = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    #model.apply(weights.KaiMingInit)
     model.to(device)
     #model.cuda()
 
@@ -120,8 +119,35 @@ scores = metrics.init_score()
 if config_run.model.backbone == "resnet50":
     nb_epochs = 20
 elif config_run.model.backbone[:3] == "vit":
-    nb_epochs = 20
+    #### dino params
+    # defaults to 100 epochs
+    # warmup: 10 epochs
+    # max weight decay after 40 epochs, starting to increase after epoch 10
+    # lr defaults to 0.0005
+    # lr_min: 0.00001
+    nb_epochs = 20.0
+    '''
+    warmup_epochs = nb_epochs // 10.0
+    decay_epochs = nb_epochs // 2.0
+    weight_decay = 0.04
+    weight_decay_end = 0.4
+    lr_dino = 0.0005
+    lr_min_dino = 0.00001
+    # ============ init schedulers ... ============
+    # args.lr * (args.batch_size_per_gpu * utils.get_world_size()) / 256.,  # linear scaling rule
+    lr_schedule = cosine_scheduler(
+        lr_dino * (config_run.train.batch_size * get_world_size()) / 256.,  # linear scaling rule
+        lr_min_dino,
+        nb_epochs, len(datasetLoader["train"]),
+        warmup_epochs=warmup_epochs,
+    )
+    wd_schedule = cosine_scheduler(
+        weight_decay,
+        weight_decay_end,
+        nb_epochs, len(datasetLoader["train"]),
+    )
     optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
+    '''
 else:
     nb_epochs = 120
 for epoch in tqdm(range(0, nb_epochs)):
@@ -131,7 +157,8 @@ for epoch in tqdm(range(0, nb_epochs)):
     if epoch in config_run.train.scheduler.milestones:
         adjust_learning_rate(optimizer, config_run.train.optimizer.lr, config_run.train.scheduler.gamma)
 
-    train_loss = training_utils.train(train_data=datasetLoader["train"],
+    if config_run.model.backbone == "resnet50":
+        train_loss = training_utils.train(train_data=datasetLoader["train"],
                                       model=model, optimizer=optimizer,
                                       warm_up_config=[1000, config_run.train.optimizer.lr],
                                       epoch=epoch, logger=trainer_logger,
@@ -139,6 +166,15 @@ for epoch in tqdm(range(0, nb_epochs)):
                                       log_interval=config_run.log.log_interval,
                                       regress_delta=config_run.model.regression_loss,
                                       is_master=is_master)
+    elif config_run.model.backbone[:3] == "vit":
+        train_loss = training_utils.train_vit(train_data=datasetLoader["train"],
+                                          model=model, optimizer=optimizer,
+                                          warm_up_config=[1000, config_run.train.optimizer.lr],
+                                          epoch=epoch, logger=trainer_logger,
+                                          tb_logger=tb_logger,
+                                          log_interval=config_run.log.log_interval,
+                                          regress_delta=config_run.model.regression_loss,
+                                          is_master=is_master)
     new_score = {}
     for config_split in [["seen", seen_id_obj], ["seen_occ", seen_occ_id_obj],
                          ["unseen", unseen_id_obj], ["unseen_occ", unseen_occ_id_obj]]:
