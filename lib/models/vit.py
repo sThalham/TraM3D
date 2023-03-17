@@ -261,8 +261,8 @@ class VisionTransformer(nn.Module):
         x = self.norm(x)
         if self.use_avg_pooling_and_fc:
             x = self.head(x)
-        return x
-        #return x[:, 0]
+        #return x
+        return x[:, 0]
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)

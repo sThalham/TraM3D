@@ -1,7 +1,7 @@
 {
   "model" :
     {
-        "backbone": "vit_b_16",
+        "backbone": "vit_small",
         "use_global": true,
         "descriptor_size": 16,
         "normalize_feature": true,
