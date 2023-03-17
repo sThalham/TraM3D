@@ -1,0 +1,40 @@
+{
+  "model" :
+    {
+        "backbone": "vit_small",
+        "use_global": true,
+        "descriptor_size": 16,
+        "normalize_feature": true,
+        "loss": "InfoNCE",
+        "regression_loss": false
+    },
+  "train":
+  {
+    "batch_size": 16,
+        "optimizer": {
+            "lr": 1.0e-4,
+            "weight_decay": 5e-4
+        },
+        "scheduler":
+        {
+            "gamma": 0.2,
+            "milestones": [20,50,80,100],
+            "update_range": "epoch"
+        },
+        "epochs": 500,
+        "num_workers": 6
+  },
+  "log":
+    {
+        "log_interval": 10,
+        "tensorboard": "results/tensorboard",
+        "weights": "results/weights"
+    },
+  "dataset":
+  {
+    "split": "split1",
+    "image_size": 224,
+    "use_augmentation": true,
+    "sample_path": "results/samples"
+  }
+}

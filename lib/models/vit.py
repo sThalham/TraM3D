@@ -16,6 +16,7 @@ Mostly copy-paste from dino.
 https://github.com/facebookresearch/dino/blob/main/vision_transformer.py
 """
 
+import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import math
@@ -244,18 +245,24 @@ class VisionTransformer(nn.Module):
         x = torch.cat((cls_tokens, x), dim=1)
 
         # add positional encoding to each token
-        x = x + self.interpolate_pos_encoding(x, w, h)
+        #torch.Size([1, 197, 384]) (batch, patch, features) starting with 1
+        pos_enc = self.interpolate_pos_encoding(x, w, h)
+        #print('positional encoding to be added: ', pos_enc.size())
+        x = x + pos_enc
 
         return self.pos_drop(x)
 
     def forward(self, x):
         x = self.prepare_tokens(x)
+        ind = 0
         for blk in self.blocks:
             x = blk(x)
+            ind += 1
         x = self.norm(x)
         if self.use_avg_pooling_and_fc:
             x = self.head(x)
-        return x[:, 0]
+        return x
+        #return x[:, 0]
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)

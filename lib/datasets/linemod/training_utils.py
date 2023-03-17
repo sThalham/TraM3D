@@ -3,7 +3,7 @@ import torch
 from lib.utils.metrics import AverageValueMeter
 
 
-def train_vit(train_data, model, optimizer, warm_up_config, epoch, logger, tb_logger,
+def train_vit(train_data, model, optimizer, warm_up_config, decay_config, epoch, logger, tb_logger,
           log_interval, regress_delta, is_master):
     start_time = time.time()
     meter_positive_similarity = AverageValueMeter()

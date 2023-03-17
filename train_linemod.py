@@ -125,8 +125,7 @@ elif config_run.model.backbone[:3] == "vit":
     # max weight decay after 40 epochs, starting to increase after epoch 10
     # lr defaults to 0.0005
     # lr_min: 0.00001
-    nb_epochs = 20.0
-    '''
+    nb_epochs = 20
     warmup_epochs = nb_epochs // 10.0
     decay_epochs = nb_epochs // 2.0
     weight_decay = 0.04
@@ -146,16 +145,15 @@ elif config_run.model.backbone[:3] == "vit":
         weight_decay_end,
         nb_epochs, len(datasetLoader["train"]),
     )
-    optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
-    '''
+    #optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 else:
     nb_epochs = 120
 for epoch in tqdm(range(0, nb_epochs)):
     if args.use_slurm and args.use_distributed:
         train_sampler.set_epoch(epoch)
     # update learning rate
-    if epoch in config_run.train.scheduler.milestones:
-        adjust_learning_rate(optimizer, config_run.train.optimizer.lr, config_run.train.scheduler.gamma)
+    #if epoch in config_run.train.scheduler.milestones:
+    #    adjust_learning_rate(optimizer, config_run.train.optimizer.lr, config_run.train.scheduler.gamma)
 
     if config_run.model.backbone == "resnet50":
         train_loss = training_utils.train(train_data=datasetLoader["train"],
@@ -169,7 +167,10 @@ for epoch in tqdm(range(0, nb_epochs)):
     elif config_run.model.backbone[:3] == "vit":
         train_loss = training_utils.train_vit(train_data=datasetLoader["train"],
                                           model=model, optimizer=optimizer,
+                                          #warm_up_config=lr_schedule,
+                                          #decay_config=wd_schedule,
                                           warm_up_config=[1000, config_run.train.optimizer.lr],
+                                          decay_config=None,
                                           epoch=epoch, logger=trainer_logger,
                                           tb_logger=tb_logger,
                                           log_interval=config_run.log.log_interval,
