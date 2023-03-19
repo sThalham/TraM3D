@@ -49,6 +49,9 @@ class BaseFeatureExtractor(nn.Module):
             similarity = self.sim_distance(feat_query, feat_template)
             return similarity
         else:
+            #print('feat_query: ', feat_query.size())
+            #print('feat_template: ', feat_template.size())
+            #print('mask: ', mask.size())
             B, C, H, W = feat_query.size(0), feat_query.size(1), feat_query.size(2), feat_query.size(3)
             mask_template = mask.repeat(1, C, 1, 1)
             num_non_zero = mask.squeeze(1).sum(axis=2).sum(axis=1)
