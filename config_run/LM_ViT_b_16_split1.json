@@ -2,7 +2,7 @@
   "model" :
     {
         "backbone": "vit_small",
-        "use_global": true,
+        "use_global": false,
         "descriptor_size": 16,
         "normalize_feature": true,
         "loss": "InfoNCE",

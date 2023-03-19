@@ -217,7 +217,7 @@ if __name__ == '__main__':
     # from model_utils import load_checkpoint
     import torch
     print('test model')
-    net = resnet50(num_classes=128)
+    net = resnet50(use_avg_pooling_and_fc=False, num_classes=128)
     data = torch.randn(2, 3, 256, 256)
     x = net(data)
     print(x.shape)

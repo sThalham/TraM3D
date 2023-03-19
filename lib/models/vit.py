@@ -179,7 +179,10 @@ class VisionTransformer(nn.Module):
                  num_heads=12, mlp_ratio=4., qkv_bias=False, qk_scale=None, drop_rate=0., attn_drop_rate=0.,
                  drop_path_rate=0., norm_layer=nn.LayerNorm, **kwargs):
         super().__init__()
+        self.img_size = img_size
         self.num_features = self.embed_dim = embed_dim
+        self.num_classes = num_classes
+        self.patch_size = patch_size
 
         self.patch_embed = PatchEmbed(
             img_size=img_size[0], patch_size=patch_size, in_chans=in_chans, embed_dim=embed_dim)
@@ -254,15 +257,17 @@ class VisionTransformer(nn.Module):
 
     def forward(self, x):
         x = self.prepare_tokens(x)
-        ind = 0
         for blk in self.blocks:
             x = blk(x)
-            ind += 1
         x = self.norm(x)
         if self.use_avg_pooling_and_fc:
-            x = self.head(x)
-        #return x
-        return x[:, 0]
+            return x[:, 0]
+        else:
+            x = x[:, 1:, :].permute(0, 2, 1)
+            B, F, _ = x.size()
+            patch_dim = self.img_size[0] // self.patch_size
+            x = x.view(B, F, patch_dim, patch_dim)
+            return x
 
     def get_last_selfattention(self, x):
         x = self.prepare_tokens(x)
@@ -344,7 +349,7 @@ if __name__ == '__main__':
     # from model_utils import load_checkpoint
     import torch
     print('test model')
-    net = vit_small(use_avg_pooling_and_fc=True, num_classes=128)
+    net = vit_small(use_avg_pooling_and_fc=False, num_classes=128)
     data = torch.randn(2, 3, 224, 224)
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     #data.to(device)

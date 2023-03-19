@@ -2,7 +2,7 @@
   "model" :
     {
         "backbone": "vit_small",
-        "use_global": true,
+        "use_global": false,
         "descriptor_size": 16,
         "normalize_feature": true,
         "loss": "InfoNCE",
@@ -10,7 +10,7 @@
     },
   "train":
   {
-    "batch_size": 16,
+    "batch_size": 2,
         "optimizer": {
             "lr": 1.0e-4,
             "weight_decay": 5e-4
@@ -22,7 +22,7 @@
             "update_range": "epoch"
         },
         "epochs": 500,
-        "num_workers": 6
+        "num_workers": 2
   },
   "log":
     {
