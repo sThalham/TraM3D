@@ -20,7 +20,6 @@ import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import math
-from torchvision.models import vit_b_16
 from torchsummary import summary
 from functools import partial
 

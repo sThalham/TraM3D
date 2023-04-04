@@ -3,7 +3,7 @@
     {
         "backbone": "vit_small",
         "use_global": false,
-        "descriptor_size": 16,
+        "descriptor_size": 8,
         "normalize_feature": true,
         "loss": "InfoNCE",
         "regression_loss": false
@@ -32,7 +32,7 @@
     },
   "dataset":
   {
-    "split": "split1",
+    "split": "split3",
     "image_size": 224,
     "use_augmentation": true,
     "sample_path": "results/samples"
