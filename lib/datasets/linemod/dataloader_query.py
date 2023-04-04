@@ -19,8 +19,9 @@ number_test_template = 301
 def get_mask_size(image_size):
     list_img_size = np.asarray([64, 96, 128, 160, 192, 224, 256])
     #list_mask_size = np.asarray([25, 12, 16, 20, 24, 28, 32])
-    list_mask_size = np.asarray([14, 14, 14, 14, 14, 14, 14])
-    mask_size = list_mask_size[np.where(list_img_size == image_size)[0]][0]
+    #list_mask_size = np.asarray([14, 14, 14, 14, 14, 14, 14])
+    #mask_size = list_mask_size[np.where(list_img_size == image_size)[0]][0]
+    mask_size=18
     return mask_size
 
 

@@ -38,13 +38,14 @@ def print_error(s):
 
 def get_logger(log_dir, name):
     log_dir = coerce_to_path_and_check_exist(log_dir)
+    logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(name)
     file_path = log_dir / "{}.log".format(name)
     hdlr = logging.FileHandler(file_path)
     formatter = logging.Formatter("[%(asctime)s] %(levelname)s: %(message)s")
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
-    logger.setLevel(logging.INFO)
+    #logger.setLevel(logging.INFO)
     return logger
 
 
