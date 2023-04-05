@@ -19,16 +19,24 @@ def train_vit(train_data, model, optimizer, warm_up_config, decay_config, epoch,
 
     model.train()
     train_size, train_loader = len(train_data), iter(train_data)
+    global_it_count = train_size * epoch
     with torch.autograd.set_detect_anomaly(True):
         for i in range(train_size):
             # update learning rate with warm up
-            if warm_up_config is not None:
-                [nb_iter_warm_up, lr] = warm_up_config
-                nb_iter = epoch * train_size + i
-                if nb_iter <= nb_iter_warm_up:
-                    lrUpdate = nb_iter / float(nb_iter_warm_up) * lr
-                    for g in optimizer.param_groups:
-                        g['lr'] = lrUpdate
+            #if warm_up_config is not None:
+                #[nb_iter_warm_up, lr] = warm_up_config
+                #nb_iter = epoch * train_size + i
+                #if nb_iter <= nb_iter_warm_up:
+                #    lrUpdate = nb_iter / float(nb_iter_warm_up) * lr
+                #    for g in optimizer.param_groups:
+                #        g['lr'] = lrUpdate
+
+            it = global_it_count + i  # global training iteration
+            for pg, param_group in enumerate(optimizer.param_groups):
+                param_group["lr"] = warm_up_config[it]
+                if pg == 0:  # only the first group is regularized
+                    param_group["weight_decay"] = decay_config[it]
+
                 #else:
                 #    if weight_decay < 0.4:
                 #        weight_decay = weight_decay + (3.6 / 3000)
@@ -81,8 +89,8 @@ def train_vit(train_data, model, optimizer, warm_up_config, decay_config, epoch,
 
             # monitoring
             if ((i + 1) % log_interval == 0 or i == 0) and is_master:
-                if warm_up_config is not None and nb_iter <= nb_iter_warm_up:
-                    text = "Learning rate: {}".format(lrUpdate)
+                if warm_up_config is not None and it <= (train_size * 2):
+                    text = "Learning rate: {}".format(warm_up_config[it])
                     logger.info(text)
                 if regress_delta:
                     filled_monitoring_text = monitoring_text.format(epoch, i + 1, train_size,
