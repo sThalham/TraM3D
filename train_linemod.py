@@ -125,7 +125,7 @@ elif config_run.model.backbone[:3] == "vit":
     # max weight decay after 40 epochs, starting to increase after epoch 10
     # lr defaults to 0.0005
     # lr_min: 0.00001
-    nb_epochs = 20
+    nb_epochs = 5
     warmup_epochs = nb_epochs // 10.0
     decay_epochs = nb_epochs // 2.0
     weight_decay = 0.04

@@ -202,10 +202,14 @@ class VisionTransformer(nn.Module):
         self.use_avg_pooling_and_fc=use_avg_pooling_and_fc
         # Classifier head
         #self.head = nn.Linear(embed_dim, num_classes) if num_classes > 0 else nn.Identity()
+
         #self.head = Block(dim=128, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
         #    drop=drop_rate, attn_drop=attn_drop_rate, drop_path=0.0, norm_layer=norm_layer)
-        mlp_hidden_dim = int(embed_dim * 4.0)
-        self.head = Mlp(in_features=embed_dim, hidden_features=mlp_hidden_dim, out_features=num_classes, act_layer=nn.GELU, drop=0.0)
+
+        #mlp_hidden_dim = int(embed_dim * 4.0)
+        #self.head = Mlp(in_features=embed_dim, hidden_features=mlp_hidden_dim, out_features=num_classes, act_layer=nn.GELU, drop=0.0)
+
+        self.head = nn.Linear(embed_dim, num_classes)
         self.norm_head = norm_layer(num_classes)
 
         trunc_normal_(self.pos_embed, std=.02)
@@ -274,7 +278,7 @@ class VisionTransformer(nn.Module):
             x = x[:, 1:, :].permute(0, 2, 1)
             B, F, _ = x.size()
             patch_dim = self.img_size[0] // self.patch_size
-            x = x.view(B, F, patch_dim, patch_dim)
+            x = x.view(B, F, patch_dim, patch_dim).permute(0, 1, 3, 2)
             return x
 
     def get_last_selfattention(self, x):
