@@ -18,26 +18,26 @@ class VitFeatureExtractor(BaseFeatureExtractor):
         if self.use_global:
             self.backbone = vit_small(use_avg_pooling_and_fc=True, num_classes=config_model.descriptor_size)
         else:
-            self.backbone = vit_small(use_avg_pooling_and_fc=False, num_classes=1)  # num_classes is useless
+            self.backbone = vit_small(use_avg_pooling_and_fc=False, num_classes=config_model.descriptor_size)  # num_classes is useless
             # some positional encoding magic should go here
             # kernel=3: out=18^2
             # kernel=5: out=22^2
             # kernel=7: out=26^2
             # kernel=9: out=30^2
-            out_size = 18
-            self.projector = nn.Sequential(nn.ReLU(inplace=False),
-                                           #nn.ConvTranspose2d(384, 256, kernel_size=3, stride=1, padding=0, bias=False),
-                                           #nn.ReLU(inplace=False),
-                                           #nn.ConvTranspose2d(256, 128, kernel_size=3, stride=1, padding=0, bias=False),
-                                           #nn.ReLU(inplace=False),
-                                           nn.Conv2d(384, config_model.descriptor_size, kernel_size=out_size, stride=out_size,
-                                                     padding=0, bias=False))
+            #out_size = 18
+            #self.projector = nn.Sequential(nn.ReLU(inplace=False),
+            #                               #nn.ConvTranspose2d(384, 256, kernel_size=3, stride=1, padding=0, bias=False),
+            #                               #nn.ReLU(inplace=False),
+            #                               #nn.ConvTranspose2d(256, 128, kernel_size=3, stride=1, padding=0, bias=False),
+            #                               #nn.ReLU(inplace=False),
+            #                               nn.Conv2d(384, config_model.descriptor_size, kernel_size=out_size, stride=out_size,
+            #                                         padding=0, bias=False))
 
     def forward(self, x):
         feat = self.backbone(x)
-        if self.use_global:
-            return feat
-        else:
-            feat = self.projector(feat)
-            return feat
+        #if self.use_global:
+        #    return feat
+        #else:
+        #    feat = self.projector(feat)
+        return feat
 

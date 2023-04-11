@@ -3,7 +3,7 @@
     {
         "backbone": "vit_small",
         "use_global": false,
-        "descriptor_size": 16,
+        "descriptor_size": 384,
         "normalize_feature": true,
         "loss": "InfoNCE",
         "regression_loss": false
