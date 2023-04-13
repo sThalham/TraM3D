@@ -130,7 +130,7 @@ elif config_run.model.backbone[:3] == "vit":
     decay_epochs = nb_epochs // 2.0
     weight_decay = 0.04
     weight_decay_end = 0.4
-    lr_dino = 0.0005
+    lr_dino = 0.00025
     lr_min_dino = 0.00001
     # ============ init schedulers ... ============
     # args.lr * (args.batch_size_per_gpu * utils.get_world_size()) / 256.,  # linear scaling rule

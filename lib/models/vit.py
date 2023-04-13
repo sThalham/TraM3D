@@ -168,7 +168,8 @@ class PatchEmbed(nn.Module):
 
     def forward(self, x):
         B, C, H, W = x.shape
-        x = self.proj(x).flatten(2).transpose(1, 2)
+        with torch.no_grad():
+            x = self.proj(x).flatten(2).transpose(1, 2)
         return x
 
 
@@ -249,7 +250,8 @@ class VisionTransformer(nn.Module):
 
     def prepare_tokens(self, x):
         B, nc, w, h = x.shape
-        x = self.patch_embed(x)  # patch linear embedding
+        with torch.no_grad():
+            x = self.patch_embed(x)  # patch linear embedding
 
         # add the [CLS] token to the embed patch tokens
         cls_tokens = self.cls_token.expand(B, -1, -1)
@@ -278,7 +280,7 @@ class VisionTransformer(nn.Module):
             x = x[:, 1:, :].permute(0, 2, 1)
             B, F, _ = x.size()
             patch_dim = self.img_size[0] // self.patch_size
-            x = x.view(B, F, patch_dim, patch_dim).permute(0, 1, 3, 2)
+            x = x.view(B, F, patch_dim, patch_dim)
             return x
 
     def get_last_selfattention(self, x):
