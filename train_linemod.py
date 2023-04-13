@@ -114,7 +114,7 @@ train_sampler, datasetLoader = init_dataloader(dict_dataloader=datasetLoader, us
 
 
 # initialize optimizer
-optimizer = torch.optim.Adam(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
+#optimizer = torch.optim.Adam(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 scores = metrics.init_score()
 if config_run.model.backbone == "resnet50":
     nb_epochs = 20
@@ -145,7 +145,7 @@ elif config_run.model.backbone[:3] == "vit":
         weight_decay_end,
         nb_epochs, len(datasetLoader["train"]),
     )
-    #optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
+    optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 else:
     nb_epochs = 120
 for epoch in tqdm(range(0, nb_epochs)):

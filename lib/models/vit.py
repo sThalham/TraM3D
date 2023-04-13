@@ -207,8 +207,8 @@ class VisionTransformer(nn.Module):
         #self.head = Block(dim=128, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
         #    drop=drop_rate, attn_drop=attn_drop_rate, drop_path=0.0, norm_layer=norm_layer)
 
-        #mlp_hidden_dim = int(embed_dim * 4.0)
-        #self.head = Mlp(in_features=embed_dim, hidden_features=mlp_hidden_dim, out_features=num_classes, act_layer=nn.GELU, drop=0.0)
+        mlp_hidden_dim = int(embed_dim * 4.0)
+        self.head = Mlp(in_features=embed_dim, hidden_features=mlp_hidden_dim, out_features=num_classes, act_layer=nn.GELU, drop=0.0)
 
         self.head = nn.Linear(embed_dim, num_classes)
         self.norm_head = norm_layer(num_classes)
@@ -250,8 +250,7 @@ class VisionTransformer(nn.Module):
 
     def prepare_tokens(self, x):
         B, nc, w, h = x.shape
-        with torch.no_grad():
-            x = self.patch_embed(x)  # patch linear embedding
+        x = self.patch_embed(x)  # patch linear embedding
 
         # add the [CLS] token to the embed patch tokens
         cls_tokens = self.cls_token.expand(B, -1, -1)
