@@ -93,26 +93,32 @@ class Mlp_projection(nn.Module):
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = nn.Linear(in_features, hidden_features)
-        self.bn1 = nn.BatchNorm2d(hidden_features)
+        self.bn1 = nn.BatchNorm1d(hidden_features)
         self.act1 = act_layer()
         self.fc2 = nn.Linear(hidden_features, hidden_features)
-        self.bn2 = nn.BatchNorm2d(hidden_features)
+        self.bn2 = nn.BatchNorm1d(hidden_features)
         self.act2 = act_layer()
         self.fc3 = nn.Linear(hidden_features, out_features)
-        self.bn3 = nn.BatchNorm2d(out_features)
+        self.bn3 = nn.BatchNorm1d(out_features)
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
         x = self.fc1(x)
+        x = x.permute(0, 2, 1)
         x = self.bn1(x)
+        x = x.permute(0, 2, 1)
         x = self.act1(x)
         x = self.drop(x)
         x = self.fc2(x)
+        x = x.permute(0, 2, 1)
         x = self.bn2(x)
+        x = x.permute(0, 2, 1)
         x = self.act2(x)
         x = self.drop(x)
         x = self.fc3(x)
+        x = x.permute(0, 2, 1)
         x = self.bn3(x)
+        x = x.permute(0, 2, 1)
         x = self.drop(x)
         return x
 
@@ -123,19 +129,23 @@ class Mlp_prediction(nn.Module):
         out_features = out_features or in_features
         hidden_features = hidden_features or in_features
         self.fc1 = nn.Linear(in_features, hidden_features)
-        self.bn1 = nn.BatchNorm2d(hidden_features)
+        self.bn1 = nn.BatchNorm1d(hidden_features)
         self.act = act_layer()
         self.fc2 = nn.Linear(hidden_features, out_features)
-        self.bn2 = nn.BatchNorm2d(out_features)
+        self.bn2 = nn.BatchNorm1d(out_features)
         self.drop = nn.Dropout(drop)
 
     def forward(self, x):
         x = self.fc1(x)
+        x = x.permute(0, 2, 1)
         x = self.bn1(x)
+        x = x.permute(0, 2, 1)
         x = self.act(x)
         x = self.drop(x)
         x = self.fc2(x)
+        x = x.permute(0, 2, 1)
         x = self.bn2(x)
+        x = x.permute(0, 2, 1)
         x = self.drop(x)
         return x
 
