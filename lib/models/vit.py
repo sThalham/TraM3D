@@ -87,6 +87,26 @@ class DropPath(nn.Module):
         return drop_path(x, self.drop_prob, self.training)
 
 
+class singleHead(nn.Module):
+    def __init__(self, in_dim, out_dim, norm_last_layer=True):
+        super().__init__()
+        self.apply(self._init_weights)
+        self.last_layer = nn.utils.weight_norm(nn.Linear(in_dim, out_dim, bias=False))
+        self.last_layer.weight_g.data.fill_(1)
+        if norm_last_layer:
+            self.last_layer.weight_g.requires_grad = False
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Linear):
+            trunc_normal_(m.weight, std=.02)
+            if isinstance(m, nn.Linear) and m.bias is not None:
+                nn.init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        x = self.last_layer(x)
+        return x
+
+
 class Mlp_projection(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
         super().__init__()
@@ -270,13 +290,14 @@ class VisionTransformer(nn.Module):
         #self.head = Block(dim=128, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
         #    drop=drop_rate, attn_drop=attn_drop_rate, drop_path=0.0, norm_layer=norm_layer)
 
-        head_activation = nn.GELU
-        projector_hidden_dim = int(embed_dim * 4.0)
-        predictor_hidden_dim = int(num_classes * 4.0)
-        self.projector = Mlp_projection(in_features=embed_dim, hidden_features=projector_hidden_dim,
-                                        out_features=num_classes, act_layer=head_activation, drop=0.0)
-        self.predictor = Mlp_prediction(in_features=num_classes, hidden_features=predictor_hidden_dim, out_features=num_classes, act_layer=head_activation, drop=0.0)
+        #head_activation = nn.GELU
+        #projector_hidden_dim = int(embed_dim * 4.0)
+        #predictor_hidden_dim = int(num_classes * 4.0)
+        #self.projector = Mlp_projection(in_features=embed_dim, hidden_features=projector_hidden_dim,
+        #                                out_features=num_classes, act_layer=head_activation, drop=0.0)
+        #self.predictor = Mlp_prediction(in_features=num_classes, hidden_features=predictor_hidden_dim, out_features=num_classes, act_layer=head_activation, drop=0.0)
         self.norm_head = norm_layer(num_classes)
+        self.head = singleHead(in_dim=embed_dim, out_dim=num_classes)
         #self.head = nn.Linear(embed_dim, num_classes)
         #self.norm_pred = norm_layer(num_classes)
 
@@ -339,9 +360,10 @@ class VisionTransformer(nn.Module):
         if self.use_avg_pooling_and_fc:
             return x[:, 0]
         else:
-            x = self.projector(x)
-            x = self.norm_head(x)
-            x = self.predictor(x)
+            #x = self.projector(x)
+            #x = self.norm_head(x)
+            #x = self.predictor(x)
+            x = self.head(x)
             x = self.norm_head(x)
             #####
             x = x[:, 1:, :].permute(0, 2, 1)
