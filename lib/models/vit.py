@@ -363,8 +363,8 @@ class VisionTransformer(nn.Module):
             #x = self.projector(x)
             #x = self.norm_head(x)
             #x = self.predictor(x)
-            x = self.head(x)
-            x = self.norm_head(x)
+            #x = self.head(x)
+            #x = self.norm_head(x)
             #####
             x = x[:, 1:, :].permute(0, 2, 1)
             B, F, _ = x.size()
