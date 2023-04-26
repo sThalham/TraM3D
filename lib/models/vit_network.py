@@ -35,9 +35,9 @@ class VitFeatureExtractor(BaseFeatureExtractor):
 
     def forward(self, x):
         feat = self.backbone(x)
-        if self.use_global:
-            return feat
-        else:
-            feat = self.projector(feat)
+        #if self.use_global:
+        #    return feat
+        #else:
+        #    feat = self.projector(feat)
         return feat
 

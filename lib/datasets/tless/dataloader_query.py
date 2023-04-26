@@ -17,9 +17,10 @@ random.seed(2021)
 
 
 def get_mask_size(image_size):
-    list_img_size = np.asarray([64, 96, 128, 160, 192, 224, 256])
-    list_mask_size = np.asarray([25, 12, 16, 20, 24, 28, 32])
-    mask_size = list_mask_size[np.where(list_img_size == image_size)[0]][0]
+    #list_img_size = np.asarray([64, 96, 128, 160, 192, 224, 256])
+    #list_mask_size = np.asarray([25, 12, 16, 20, 24, 28, 32])
+    #mask_size = list_mask_size[np.where(list_img_size == image_size)[0]][0]
+    mask_size = 14
     return mask_size
 
 

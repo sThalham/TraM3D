@@ -6,9 +6,10 @@ from tqdm import tqdm
 from lib.utils import gpu_utils, weights, metrics
 from lib.utils.config import Config
 from lib.datasets.dataloader_utils import init_dataloader
-from lib.utils.optimizer import adjust_learning_rate
+from lib.utils.optimizer import adjust_learning_rate, cosine_scheduler, get_world_size
 
 from lib.models.network import FeatureExtractor
+from lib.models.vit_network import VitFeatureExtractor
 
 from lib.datasets.tless.dataloader_query import Tless
 from lib.datasets.tless.dataloader_template import TemplatesTless
@@ -45,15 +46,21 @@ trainer_logger, tb_logger, is_master, world_size, local_rank = gpu_utils.init_gp
                                                                                   trainer_logger_name=dir_name)
 
 # initialize network
-model = FeatureExtractor(config_model=config_run.model, threshold=0.2)
-model.apply(weights.KaiMingInit)
-model.cuda()
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+#model = FeatureExtractor(config_model=config_run.model, threshold=0.2)
+#model.apply(weights.KaiMingInit)
+#model.cuda()
+model = VitFeatureExtractor(config_model=config_run.model, threshold=0.2)
+#model.apply(weights.KaiMingInit)
+model.to(device)
+
+
 # load pretrained weight if backbone are ResNet50
-if config_run.model.backbone == "resnet50":
-    print("Loading pretrained weights from MOCO...")
-    weights.load_pretrained_backbone(prefix="backbone.",
-                                     model=model, pth_path=os.path.join(config_global.root_path,
-                                                                        config_run.model.pretrained_weights_resnet50))
+#if config_run.model.backbone == "resnet50":
+#    print("Loading pretrained weights from MOCO...")
+#    weights.load_pretrained_backbone(prefix="backbone.",
+#                                     model=model, pth_path=os.path.join(config_global.root_path,
+#                                                                        config_run.model.pretrained_weights_resnet50))
 
 seen_ids, unseen_ids = range(1, 18), range(19, 31)
 config_loader = [["train", "train", "query", seen_ids, config_run.dataset.use_augmentation]]
@@ -82,16 +89,33 @@ train_sampler, datasetLoader = init_dataloader(dict_dataloader=datasetLoader, us
                                                num_workers=config_run.train.num_workers)
 
 # initialize optimizer
-optimizer = torch.optim.Adam(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
-scores = metrics.init_score()
+#optimizer = torch.optim.Adam(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
+#scores = metrics.init_score()
+nb_epochs = 5
+warmup_epochs = nb_epochs // 10.0
+decay_epochs = nb_epochs // 2.0
+weight_decay = 0.04
+weight_decay_end = 0.4
+lr_dino = 0.00025
+lr_min_dino = 0.00001
+# ============ init schedulers ... ============
+# args.lr * (args.batch_size_per_gpu * utils.get_world_size()) / 256.,  # linear scaling rule
+lr_schedule = cosine_scheduler(
+    lr_dino * (config_run.train.batch_size * get_world_size()) / 256.,  # linear scaling rule
+    lr_min_dino,
+    nb_epochs, len(datasetLoader["train"]),
+    warmup_epochs=warmup_epochs,
+)
+wd_schedule = cosine_scheduler(
+    weight_decay,
+    weight_decay_end,
+    nb_epochs, len(datasetLoader["train"]),
+)
+optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 
 for epoch in tqdm(range(0, 25)):
     if args.use_slurm and args.use_distributed:
         train_sampler.set_epoch(epoch)
-
-    # update learning rate
-    if epoch in config_run.train.scheduler.milestones:
-        adjust_learning_rate(optimizer, config_run.train.optimizer.lr, config_run.train.scheduler.gamma)
 
     if epoch % 3 == 0 and epoch > 0:
         for id_obj in unseen_ids:
@@ -106,12 +130,17 @@ for epoch in tqdm(range(0, 25)):
                                                epoch=epoch,
                                                logger=trainer_logger, tb_logger=tb_logger, is_master=is_master)
 
-    train_loss = training_utils.train(train_data=datasetLoader["train"],
-                                      model=model, optimizer=optimizer,
-                                      warm_up_config=[1000, config_run.train.optimizer.lr],
-                                      epoch=epoch, logger=trainer_logger, tb_logger=tb_logger,
-                                      log_interval=config_run.log.log_interval,
-                                      is_master=is_master)
+    train_loss = training_utils.train_vit(train_data=datasetLoader["train"],
+                                          model=model, optimizer=optimizer,
+                                          warm_up_config=lr_schedule,
+                                          decay_config=wd_schedule,
+                                          # warm_up_config=[1000, config_run.train.optimizer.lr],
+                                          # decay_config=None,
+                                          epoch=epoch, logger=trainer_logger,
+                                          tb_logger=tb_logger,
+                                          log_interval=config_run.log.log_interval,
+                                          regress_delta=config_run.model.regression_loss,
+                                          is_master=is_master)
 
     text = '\nEpoch-{}: train_loss={} \n\n'
     if is_master:

@@ -297,8 +297,8 @@ class VisionTransformer(nn.Module):
         #                                out_features=num_classes, act_layer=head_activation, drop=0.0)
         #self.predictor = Mlp_prediction(in_features=num_classes, hidden_features=predictor_hidden_dim, out_features=num_classes, act_layer=head_activation, drop=0.0)
         self.norm_head = norm_layer(num_classes)
-        self.head = singleHead(in_dim=embed_dim, out_dim=num_classes)
-        #self.head = nn.Linear(embed_dim, num_classes)
+        #self.head = singleHead(in_dim=embed_dim, out_dim=num_classes)
+        self.head = nn.Linear(embed_dim, num_classes)
         #self.norm_pred = norm_layer(num_classes)
 
         trunc_normal_(self.pos_embed, std=.02)
@@ -363,8 +363,8 @@ class VisionTransformer(nn.Module):
             #x = self.projector(x)
             #x = self.norm_head(x)
             #x = self.predictor(x)
-            #x = self.head(x)
-            #x = self.norm_head(x)
+            x = self.head(x)
+            x = self.norm_head(x)
             #####
             x = x[:, 1:, :].permute(0, 2, 1)
             B, F, _ = x.size()
