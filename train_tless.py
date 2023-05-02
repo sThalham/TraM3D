@@ -91,7 +91,7 @@ train_sampler, datasetLoader = init_dataloader(dict_dataloader=datasetLoader, us
 # initialize optimizer
 #optimizer = torch.optim.Adam(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 #scores = metrics.init_score()
-nb_epochs = 5
+nb_epochs = 2
 warmup_epochs = nb_epochs // 10.0
 decay_epochs = nb_epochs // 2.0
 weight_decay = 0.04
@@ -113,11 +113,11 @@ wd_schedule = cosine_scheduler(
 )
 optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 
-for epoch in tqdm(range(0, 25)):
+for epoch in tqdm(range(0, 2)):
     if args.use_slurm and args.use_distributed:
         train_sampler.set_epoch(epoch)
 
-    if epoch % 3 == 0 and epoch > 0:
+    if epoch % 1 == 0 and epoch > 0:
         for id_obj in unseen_ids:
             save_prediction_obj_path = os.path.join(config_global.root_path,
                                                     config_run.save_prediction_path, dir_name, "{:02d}".format(id_obj))
@@ -130,7 +130,8 @@ for epoch in tqdm(range(0, 25)):
                                                epoch=epoch,
                                                logger=trainer_logger, tb_logger=tb_logger, is_master=is_master)
 
-    train_loss = training_utils.train_vit(train_data=datasetLoader["train"],
+    if epoch>0:
+        train_loss = training_utils.train_vit(train_data=datasetLoader["train"],
                                           model=model, optimizer=optimizer,
                                           warm_up_config=lr_schedule,
                                           decay_config=wd_schedule,
@@ -142,7 +143,7 @@ for epoch in tqdm(range(0, 25)):
                                           regress_delta=config_run.model.regression_loss,
                                           is_master=is_master)
 
-    text = '\nEpoch-{}: train_loss={} \n\n'
+        text = '\nEpoch-{}: train_loss={} \n\n'
     if is_master:
         weights.save_checkpoint({'model': model.state_dict()},
                                 os.path.join(save_path, 'model_epoch{}.pth'.format(epoch)))

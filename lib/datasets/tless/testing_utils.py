@@ -19,7 +19,7 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, id_obj, sav
         list_feature_template, list_synthetic_pose, list_mask, list_idx_template, list_inplane = [], [], [], [], []
         for i in tqdm(range(template_size)):
             # read all templates and its poses
-            miniBatch = template_dataloader.next()
+            miniBatch = next(template_dataloader)
 
             template = miniBatch["template"].cuda()
             obj_pose = miniBatch["obj_pose"].cuda()
@@ -45,7 +45,7 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, id_obj, sav
                  "pred_template_pose", "pred_idx_template", "pred_inplane"]
         results = {names[i]: [] for i in range(len(names))}
         for i in tqdm(range(query_size)):
-            miniBatch = query_dataloader.next()
+            miniBatch = next(query_dataloader)
 
             query = miniBatch["query"].cuda()
             feature_query = model(query)
