@@ -6,11 +6,13 @@ from tqdm import tqdm
 # multiprocessing to accelerate the rendering
 from functools import partial
 import multiprocessing
+import torch
 
 from lib.utils import gpu_utils, weights, metrics
 from lib.utils.config import Config
 from lib.datasets.dataloader_utils import init_dataloader
 from lib.models.network import FeatureExtractor
+from lib.models.vit_network import VitFeatureExtractor
 
 from lib.datasets.tless.dataloader_query import Tless
 from lib.datasets.tless.dataloader_template import TemplatesTless
@@ -48,15 +50,18 @@ trainer_logger, tb_logger, is_master, world_size, local_rank = gpu_utils.init_gp
                                                                                   trainer_logger_name="TLESS_test")
 
 # initialize network
-model = FeatureExtractor(config_model=config_run.model, threshold=0.2)
-model.apply(weights.KaiMingInit)
-model.cuda()
+#model = FeatureExtractor(config_model=config_run.model, threshold=0.2)
+#model.apply(weights.KaiMingInit)
+#model.cuda()
 # load pretrained weight if backbone are ResNet50
-if config_run.model.backbone == "resnet50":
-    print("Loading pretrained weights from MOCO...")
-    weights.load_pretrained_backbone(prefix="backbone.",
-                                     model=model, pth_path=os.path.join(config_global.root_path,
-                                                                        config_run.model.pretrained_weights_resnet50))
+#if config_run.model.backbone == "resnet50":
+#    print("Loading pretrained weights from MOCO...")
+#    weights.load_pretrained_backbone(prefix="backbone.",
+#                                     model=model, pth_path=os.path.join(config_global.root_path,
+#                                                                        config_run.model.pretrained_weights_resnet50))
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+model = VitFeatureExtractor(config_model=config_run.model, threshold=0.2)
+model.to(device)
 weights.load_checkpoint(model=model, pth_path=args.checkpoint)
 
 ids = range(1, 31)
@@ -145,3 +150,5 @@ for score in mapped_values:
     unseen_scores.extend(score)
 print("Final score of unseen object: {}".format(np.mean(unseen_scores)))
 print("Total time to evaluate T-LESS on unseen objects ", finish_time - start_time)
+
+print("Average percentage of true poses: {}".format(np.mean(np.concatenate([seen_scores, unseen_scores]))))

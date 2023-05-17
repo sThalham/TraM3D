@@ -1,0 +1,4 @@
+#!/bin/sh
+python train_linemod.py --config_path config_run/LM_vit_small_split1.json
+python train_linemod.py --config_path config_run/LM_vit_small_split2.json
+python train_linemod.py --config_path config_run/LM_vit_small_split3.json

@@ -290,15 +290,16 @@ class VisionTransformer(nn.Module):
         #self.head = Block(dim=128, num_heads=num_heads, mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, qk_scale=qk_scale,
         #    drop=drop_rate, attn_drop=attn_drop_rate, drop_path=0.0, norm_layer=norm_layer)
 
-        #head_activation = nn.GELU
+        head_activation = nn.GELU
+        self.head_bn = nn.BatchNorm1d(embed_dim)
         #projector_hidden_dim = int(embed_dim * 4.0)
-        #predictor_hidden_dim = int(num_classes * 4.0)
+        predictor_hidden_dim = int(embed_dim * 4.0)
         #self.projector = Mlp_projection(in_features=embed_dim, hidden_features=projector_hidden_dim,
         #                                out_features=num_classes, act_layer=head_activation, drop=0.0)
-        #self.predictor = Mlp_prediction(in_features=num_classes, hidden_features=predictor_hidden_dim, out_features=num_classes, act_layer=head_activation, drop=0.0)
+        self.predictor = Mlp_prediction(in_features=embed_dim, hidden_features=predictor_hidden_dim, out_features=num_classes, act_layer=head_activation, drop=0.0)
         self.norm_head = norm_layer(num_classes)
         #self.head = singleHead(in_dim=embed_dim, out_dim=num_classes)
-        self.head = nn.Linear(embed_dim, num_classes)
+        #self.head = nn.Linear(embed_dim, num_classes)
         #self.norm_pred = norm_layer(num_classes)
 
         trunc_normal_(self.pos_embed, std=.02)
@@ -362,8 +363,12 @@ class VisionTransformer(nn.Module):
         else:
             #x = self.projector(x)
             #x = self.norm_head(x)
-            #x = self.predictor(x)
-            x = self.head(x)
+            x = self.predictor(x)
+            #x = x.permute(0, 2, 1)
+            #x = self.head_bn(x)
+            #x = x.permute(0, 2, 1)
+            #x = self.head_activation(x)
+            #x = self.head(x)
             x = self.norm_head(x)
             #####
             x = x[:, 1:, :].permute(0, 2, 1)
