@@ -1,6 +1,27 @@
 import os, time
 import torch
 from lib.utils.metrics import AverageValueMeter
+import cv2
+import numpy as np
+import torchvision.transforms as transforms
+
+
+class UnNormalize(object):
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image of size (C, H, W) to be normalized.
+        Returns:
+            Tensor: Normalized image.
+        """
+        for t, m, s in zip(tensor, self.mean, self.std):
+            t.mul_(s).add_(m)
+            # The normalize code -> t.sub_(m).div_(s)
+        return tensor
 
 
 def train_vit(train_data, model, optimizer, warm_up_config, decay_config, epoch, logger, tb_logger,
@@ -16,6 +37,10 @@ def train_vit(train_data, model, optimizer, warm_up_config, decay_config, epoch,
     model.train()
     train_size, train_loader = len(train_data), iter(train_data)
     global_it_count = train_size * epoch
+
+    unorm = UnNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+
+
     with torch.autograd.set_detect_anomaly(True):
         for i in range(train_size):
             # update learning rate with warm up
@@ -38,6 +63,23 @@ def train_vit(train_data, model, optimizer, warm_up_config, decay_config, epoch,
             query = miniBatch["query"].cuda()
             template = miniBatch["template"].cuda()
             mask = miniBatch["mask"].cuda().float()
+
+            #for bat in range(query.shape[0]):
+
+            #    invTrans = transforms.Compose([transforms.Normalize(mean=[0., 0., 0.], std=[1 / 0.229, 1 / 0.224, 1 / 0.225]),
+            #                                   transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1., 1., 1.]),])
+            #    query_img = invTrans(query).cpu().numpy()[bat, ...]*255
+            #    query_img = np.transpose(query_img, (1, 2, 0))
+            #    template_img = invTrans(template).cpu().numpy()[bat, ...]*255
+            #    template_img = np.transpose(template_img, (1, 2, 0))
+
+            #    mask_img = mask.cpu().numpy()[bat, ...]
+            #    mask_img = np.transpose(mask_img, (1, 2, 0))
+            #    mask_img = np.repeat(mask_img, axis=2, repeats=3)*255
+            #    print(np.min(query_img), np.max(query_img))
+            #    cv2.imwrite('/home/stefan/debug_viz/query_'+ str(i) +'_' + str(bat) + '.png', query_img)
+            #    cv2.imwrite('/home/stefan/debug_viz/template_' + str(i) + '_' + str(bat) + '.png', template_img)
+            #    cv2.imwrite('/home/stefan/debug_viz/mask_' + str(i) + '_' + str(bat) + '.png', mask_img)
 
             feature_query = model(query)
             feature_template = model(template)

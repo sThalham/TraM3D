@@ -452,7 +452,7 @@ if __name__ == '__main__':
     # from model_utils import load_checkpoint
     import torch
     print('test model')
-    net = vit_small(use_avg_pooling_and_fc=False, num_classes=64)
+    net = vit_small(use_avg_pooling_and_fc=False, num_classes=384)
     data = torch.randn(2, 3, 224, 224)
     #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     #data.to(device)

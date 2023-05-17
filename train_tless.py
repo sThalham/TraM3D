@@ -117,7 +117,8 @@ for epoch in tqdm(range(0, 25)):
     if args.use_slurm and args.use_distributed:
         train_sampler.set_epoch(epoch)
 
-    if epoch % 3 == 0 and epoch > 0:
+    #if epoch % 1 == 0 and epoch > 0:
+    if epoch == 0:
         for id_obj in unseen_ids:
             save_prediction_obj_path = os.path.join(config_global.root_path,
                                                     config_run.save_prediction_path, dir_name, "{:02d}".format(id_obj))
