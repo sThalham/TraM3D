@@ -176,9 +176,11 @@ for epoch in tqdm(range(0, nb_epochs)):
                                           log_interval=config_run.log.log_interval,
                                           regress_delta=config_run.model.regression_loss,
                                           is_master=is_master)
+
     new_score = {}
     for config_split in [["seen", seen_id_obj], ["seen_occ", seen_occ_id_obj],
                          ["unseen", unseen_id_obj], ["unseen_occ", unseen_occ_id_obj]]:
+    #for config_split in [["unseen_occ", unseen_occ_id_obj]]:
         query_name = config_split[0] + "_test"
         template_name = config_split[0] + "_template"
         testing_score = testing_utils.test(query_data=datasetLoader[query_name],

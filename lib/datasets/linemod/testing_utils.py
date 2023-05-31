@@ -4,6 +4,14 @@ import torch.nn.functional as F
 from lib.utils.metrics import AverageValueMeter
 from lib.datasets.linemod import inout
 
+import cv2
+import numpy as np
+import torchvision.transforms as transforms
+
+invTrans = transforms.Compose(
+                [transforms.Normalize(mean=[0., 0., 0.], std=[1 / 0.229, 1 / 0.224, 1 / 0.225]),
+                 transforms.Normalize(mean=[-0.485, -0.456, -0.406], std=[1., 1., 1.]), ])
+
 
 def calculate_score(pred_location, gt_location, id_symmetry, id_obj, pred_id_obj):
     unique_ids, inverse_indices = torch.unique(id_obj, sorted=True, return_inverse=True)
@@ -88,6 +96,7 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
     model.eval()
     with torch.no_grad():
         list_feature_template, list_synthetic_pose, list_id_obj_template, list_mask = [], [], [], []
+        list_templates = []
         for i in range(template_size):
             # read all templates and its poses
             miniBatch = next(template_dataloader)
@@ -103,10 +112,16 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
             list_mask.append(mask)
             list_feature_template.append(feature_template)
 
+            ##viz
+            list_templates.append(template)
+
         list_feature_template = torch.cat(list_feature_template, dim=0)
         list_synthetic_pose = torch.cat(list_synthetic_pose, dim=0)
         list_id_obj_template = torch.cat(list_id_obj_template, dim=0)
         list_mask = torch.cat(list_mask, dim=0)
+
+        ## viz
+        list_templates = torch.cat(list_templates, dim=0)
 
         for i in range(query_size):
             miniBatch = next(query_dataloader)
@@ -123,6 +138,31 @@ def test(query_data, template_data, model, epoch, logger, tb_logger, split_name,
             weight_sim, pred_index = matrix_sim.topk(k=1)
             pred_pose = list_synthetic_pose[pred_index.reshape(-1)]
             pred_id_obj = list_id_obj_template[pred_index.reshape(-1)]
+
+            '''
+            matched_templates = list_templates[pred_index.reshape(-1)]
+            matched_masks = list_mask[pred_index.reshape(-1)]
+            id = miniBatch["id_obj"].detach().numpy()
+            for bat in range(query.shape[0]):
+                query_img = invTrans(query).cpu().numpy()[bat, ...] * 255
+                query_img = np.transpose(query_img, (1, 2, 0))
+                query_img = np.flip(query_img, axis=2)
+                template_img = invTrans(matched_templates).cpu().numpy()[bat, ...] * 255
+                template_img = np.transpose(template_img, (1, 2, 0))
+                template_img = np.flip(template_img, axis=2)
+
+                mask_img = matched_masks.cpu().numpy()[bat, ...]
+                mask_img = np.transpose(mask_img, (1, 2, 0))
+                mask_img = np.repeat(mask_img, axis=2, repeats=3) * 255
+
+                cv2.imwrite('/hdd/TraM3D/LM_viz_data/viz_unseen_raw/query_' + str(id[bat]) + str(i) + '_' + str(bat) + '.png',
+                            query_img)
+                cv2.imwrite(
+                    '/hdd/TraM3D/LM_viz_data/viz_unseen_raw/template_' + str(id[bat]) + str(i) + '_' + str(bat) + '.png',
+                    template_img)
+                cv2.imwrite('/hdd/TraM3D/LM_viz_data/viz_unseen_raw/mask_' + str(id[bat]) + str(i) + '_' + str(bat) + '.png',
+                            mask_img)
+            '''
 
             err, acc, class_score, class_and_pose15, class_and_pose12, class_and_pose9, class_and_pose6, class_and_pose3 = calculate_score(pred_location=pred_pose,
                                                                     gt_location=obj_pose,

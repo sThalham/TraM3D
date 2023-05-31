@@ -11,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+# modified by sThalham
+
 import os
 import sys
 import argparse
+
+import PIL.Image
 import cv2
 import random
 import colorsys
@@ -101,6 +106,7 @@ if __name__ == '__main__':
                         help="Path to pretrained weights to load.")
     parser.add_argument('--config_path', type=str)
     parser.add_argument("--image_path", default=None, type=str, help="Path of the image to load.")
+    parser.add_argument("--mask_path", default=None, type=str, help="Path of the image to load.")
     parser.add_argument("--image_size", default=(224, 224), type=int, nargs="+", help="Resize image.")
     parser.add_argument('--patch_size', default=16, type=int, help='Patch resolution of the model.')
     parser.add_argument('--output_dir', default='./viz', help='Path where to save visualizations.')
@@ -148,6 +154,16 @@ if __name__ == '__main__':
     else:
         print(f"Provided image path {args.image_path} is non valid.")
         sys.exit(1)
+
+    if args.mask_path is None:
+        # user has not specified any image - we use our own image
+        print("Please use the `--mask_path` argument to indicate the mask to use for masking the image.")
+    elif os.path.isfile(args.mask_path):
+        with open(args.mask_path, 'rb') as f:
+            msk = Image.open(f)
+            msk = np.array(msk.resize(args.image_size,resample=PIL.Image.NEAREST))
+            #msk = msk.convert('RGB')
+
     transform = pth_transforms.Compose([
         pth_transforms.Resize(args.image_size),
         pth_transforms.ToTensor(),
@@ -188,10 +204,18 @@ if __name__ == '__main__':
     # save attentions heatmaps
     os.makedirs(args.output_dir, exist_ok=True)
     in_path_split = os.path.split(args.image_path)
+    msk_path_split = os.path.split(args.mask_path)
     torchvision.utils.save_image(torchvision.utils.make_grid(img, normalize=True, scale_each=True), os.path.join(args.output_dir, in_path_split[-1][:-4] + "_img.png"))
     for j in range(nh):
         fname = os.path.join(args.output_dir, in_path_split[-1][:-4] + "_attn-head" + str(j) + ".png")
         plt.imsave(fname=fname, arr=attentions[j], format='png')
+        print(j, np.max(attentions[j]))
+        if args.mask_path is not None:
+            plt.imsave(fname=os.path.join(args.output_dir, msk_path_split[-1][:-4] + "_msk.png"), arr=msk, format='png')
+            mname = os.path.join(args.output_dir, in_path_split[-1][:-4] + "_attn-head_masked" + str(j) + ".png")
+            msk_att = np.where(msk[:, :, 0]==255, attentions[j], np.min(attentions[j]))
+            plt.imsave(fname=mname, arr=msk_att, format='png')
+            print(j, np.max(msk_att))
         print(f"{fname} saved.")
 
     if args.threshold is not None:

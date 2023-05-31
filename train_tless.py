@@ -113,12 +113,11 @@ wd_schedule = cosine_scheduler(
 )
 optimizer = torch.optim.AdamW(list(model.parameters()), lr=config_run.train.optimizer.lr, weight_decay=0.0005)
 
-for epoch in tqdm(range(0, 2)):
+for epoch in tqdm(range(0, 5)):
     if args.use_slurm and args.use_distributed:
         train_sampler.set_epoch(epoch)
 
-    #if epoch % 1 == 0 and epoch > 0:
-    if epoch == 0:
+    if epoch % 1 == 0 and epoch > 0:
         for id_obj in unseen_ids:
             save_prediction_obj_path = os.path.join(config_global.root_path,
                                                     config_run.save_prediction_path, dir_name, "{:02d}".format(id_obj))

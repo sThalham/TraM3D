@@ -34,7 +34,7 @@
   {
     "split": "split2",
     "image_size": 224,
-    "use_augmentation": true,
+    "use_augmentation": false,
     "sample_path": "results/samples"
   }
 }
