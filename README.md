@@ -1,3 +1,6 @@
+This is a stale fork of [**template-pose**](https://github.com/nv-nguyen/template-pose).
+Please check out their Github repository for their maintained repository. 
+
 # template-pose
 Pytorch implementation of [**"Templates for 3D Object Pose Estimation Revisited: Generalization to New objects and Robustness to Occlusions"**](https://arxiv.org/abs/2203.17234) paper (accepted to CVPR 2022)
 
