@@ -6,7 +6,14 @@ Pytorch implementation of [**"Self-supervised Vision Transformers for 3D Pose Es
 
 If our project is helpful for your research, please consider citing : 
 ``` Bash
-
+@misc{thalhammer2023selfsupervised,
+      title={Self-supervised Vision Transformers for 3D Pose Estimation of Novel Objects}, 
+      author={Stefan Thalhammer and Jean-Baptiste Weibel and Markus Vincze and Jose Garcia-Rodriguez},
+      year={2023},
+      eprint={2306.00129},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
 ```
 ## Table of Content
 * [Installation](#Installation)
